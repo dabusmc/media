@@ -1,0 +1,140 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+}
+
+header {
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    background: #1a1a1a;
+    z-index: 100;
+}
+
+h1 {
+    margin: 0;
+}
+
+.top-bar {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+#searchInput {
+    flex: 1;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: none;
+}
+
+.controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.controls button {
+    background: #2a2a2a;
+    color: white;
+    border: 1px solid #333;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.controls button:hover {
+    background: #3a3a3a;
+}
+
+.grid {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.section {
+    display: contents;
+}
+
+.card {
+    background: #1f1f1f;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: scale(1.03);
+}
+
+.poster {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    background: #222;
+    display: block;
+}
+
+.info {
+    padding: 0.75rem;
+}
+
+.title {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.year {
+    color: #aaa;
+    margin-top: 0.25rem;
+}
+
+.not-done {
+    color: #ff6666;
+}
+
+.divider {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: #333;
+    margin: 2rem 0;
+    opacity: 0.5;
+}
+
+.section-title {
+    grid-column: 1 / -1;
+    font-size: 1rem;
+    color: #aaa;
+    margin: 0 1rem 0.5rem;
+}
+
+@media (max-width: 700px) {
+    .top-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    header {
+        background: rgba(26, 26, 26, 0.95);
+        backdrop-filter: blur(8px);
+    }
+}
+
+@media (max-width: 400px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
