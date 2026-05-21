@@ -62,6 +62,8 @@ async function loadFilms() {
     const text = await res.text();
     allFilms = parseCSV(text);
     displayFilms();
+
+    document.getElementById("loading").style.display = "none";
 }
 
 function setSort(mode) {
