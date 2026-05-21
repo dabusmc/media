@@ -148,7 +148,16 @@ function displayFilms() {
     const token = ++renderToken;
     filmGrid.innerHTML = "";
 
-    const list = getFilteredFilms();
+    const query = searchInput.value.trim().toLowerCase();
+    const isSearching = query.length > 0;
+
+    let list = allFilms;
+
+    if (isSearching) {
+        list = allFilms.filter(f =>
+            (f.Film || "").toLowerCase().includes(query)
+        );
+    }
 
     const completed = sortFilms(list.filter(f => f.Completed.toUpperCase() === "TRUE"));
     const uncompleted = sortFilms(list.filter(f => f.Completed.toUpperCase() !== "TRUE"));
@@ -165,6 +174,20 @@ function displayFilms() {
         return;
     }
 
+    if (isSearching) {
+        const combined = [...completed, ...uncompleted];
+
+        const section = document.createElement("div");
+        section.className = "section";
+
+        combined.forEach(f => {
+            section.appendChild(createCard(f, f.Completed.toUpperCase() !== "TRUE", token));
+        });
+
+        filmGrid.appendChild(section);
+        return;
+    }
+
     const completedSection = document.createElement("div");
     completedSection.className = "section";
 
@@ -174,25 +197,23 @@ function displayFilms() {
 
     filmGrid.appendChild(completedSection);
 
-    if (!searchInput.value.trim()) {
-        const divider = document.createElement("div");
-        divider.className = "divider";
-        filmGrid.appendChild(divider);
+    const divider = document.createElement("div");
+    divider.className = "divider";
+    filmGrid.appendChild(divider);
 
-        const label = document.createElement("h2");
-        label.className = "section-title";
-        label.textContent = "Not Yet Added";
-        filmGrid.appendChild(label);
+    const label = document.createElement("h2");
+    label.className = "section-title";
+    label.textContent = "Not Yet Added";
+    filmGrid.appendChild(label);
 
-        const uncompletedSection = document.createElement("div");
-        uncompletedSection.className = "section";
+    const uncompletedSection = document.createElement("div");
+    uncompletedSection.className = "section";
 
-        uncompleted.forEach(f => {
-            uncompletedSection.appendChild(createCard(f, true, token));
-        });
+    uncompleted.forEach(f => {
+        uncompletedSection.appendChild(createCard(f, true, token));
+    });
 
-        filmGrid.appendChild(uncompletedSection);
-    }
+    filmGrid.appendChild(uncompletedSection);
 }
 
 function createCard(film, isUncompleted, token) {
