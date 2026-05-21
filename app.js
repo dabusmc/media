@@ -27,7 +27,7 @@ function parseCSV(csv) {
             Film: (obj["Film"] || "").trim(),
             IMDB: (obj["IMDB"] || "").trim(),
             "Release Year": (obj["Release Year"] || "").trim(),
-            Completed: (obj["Completed"] || "").trim()
+            Completed: String(obj["Completed"] || "").trim().toUpperCase() === "TRUE"
         };
     }).filter(f => f.Film && f.IMDB);
 }
@@ -60,10 +60,12 @@ function parseCSVLine(line) {
 async function loadFilms() {
     const res = await fetch(sheetURL, { cache: "no-store" });
     const text = await res.text();
+
     allFilms = parseCSV(text);
     displayFilms();
 
-    document.getElementById("loading").style.display = "none";
+    const loading = document.getElementById("loading");
+    if (loading) loading.style.display = "none";
 }
 
 function setSort(mode) {
@@ -76,7 +78,6 @@ function setSort(mode) {
             sortMode = mode;
         }
     }
-
     displayFilms();
 }
 
@@ -105,7 +106,12 @@ async function getTMDBPoster(imdbUrl) {
     if (!id) return "posters/placeholder.png";
 
     const cached = posterCache[id];
-    if (cached && cached.url !== "posters/placeholder.png" && Date.now() - cached.time < CACHE_EXPIRY) {
+
+    if (
+        cached &&
+        cached.url !== "posters/placeholder.png" &&
+        Date.now() - cached.time < CACHE_EXPIRY
+    ) {
         return cached.url;
     }
 
@@ -135,16 +141,11 @@ async function getTMDBPoster(imdbUrl) {
 
 function getFilteredFilms() {
     const query = searchInput.value.trim().toLowerCase();
+    if (!query) return allFilms;
 
-    let list = allFilms;
-
-    if (query) {
-        list = list.filter(f =>
-            (f.Film || "").toLowerCase().includes(query)
-        );
-    }
-
-    return list;
+    return allFilms.filter(f =>
+        (f.Film || "").toLowerCase().includes(query)
+    );
 }
 
 function displayFilms() {
@@ -154,16 +155,10 @@ function displayFilms() {
     const query = searchInput.value.trim().toLowerCase();
     const isSearching = query.length > 0;
 
-    let list = allFilms;
+    const list = getFilteredFilms();
 
-    if (isSearching) {
-        list = allFilms.filter(f =>
-            (f.Film || "").toLowerCase().includes(query)
-        );
-    }
-
-    const completed = sortFilms(list.filter(f => f.Completed.toUpperCase() === "TRUE"));
-    const uncompleted = sortFilms(list.filter(f => f.Completed.toUpperCase() !== "TRUE"));
+    const completed = sortFilms(list.filter(f => f.Completed));
+    const uncompleted = sortFilms(list.filter(f => !f.Completed));
 
     if (!completed.length && !uncompleted.length) {
         const empty = document.createElement("div");
@@ -178,13 +173,11 @@ function displayFilms() {
     }
 
     if (isSearching) {
-        const combined = [...completed, ...uncompleted];
-
         const section = document.createElement("div");
         section.className = "section";
 
-        combined.forEach(f => {
-            section.appendChild(createCard(f, f.Completed.toUpperCase() !== "TRUE", token));
+        [...completed, ...uncompleted].forEach(f => {
+            section.appendChild(createCard(f, !f.Completed, token));
         });
 
         filmGrid.appendChild(section);
@@ -255,5 +248,4 @@ async function loadPoster(img, imdb, token) {
 }
 
 searchInput.addEventListener("input", displayFilms);
-
 loadFilms();
