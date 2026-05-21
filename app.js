@@ -105,7 +105,7 @@ async function getTMDBPoster(imdbUrl) {
     if (!id) return "posters/placeholder.png";
 
     const cached = posterCache[id];
-    if (cached && Date.now() - cached.time < CACHE_EXPIRY) {
+    if (cached && cached.url !== "posters/placeholder.png" && Date.now() - cached.time < CACHE_EXPIRY) {
         return cached.url;
     }
 
@@ -119,12 +119,15 @@ async function getTMDBPoster(imdbUrl) {
 
         const poster = movie?.poster_path
             ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-            : "posters/placeholder.png";
+            : null;
 
-        posterCache[id] = { url: poster, time: Date.now() };
-        localStorage.setItem("posterCache", JSON.stringify(posterCache));
+        if (poster) {
+            posterCache[id] = { url: poster, time: Date.now() };
+            localStorage.setItem("posterCache", JSON.stringify(posterCache));
+            return poster;
+        }
 
-        return poster;
+        return "posters/placeholder.png";
     } catch {
         return "posters/placeholder.png";
     }
