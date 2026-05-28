@@ -24,6 +24,42 @@
 <main>
     <div id="loading">Loading films...</div>
     <div id="filmGrid" class="grid"></div>
+
+    <div id="filmModal" class="modal hidden">
+        <div class="modal-content">
+
+            <button id="modalClose" class="modal-close">x</button>
+
+            <div class="modal-backdrop" id="modalBackdrop"></div>
+
+            <div class="modal-inner">
+
+                <img id="modalPoster" class="modal-poster">
+
+                <div class="modal-info">
+
+                    <h2 id="modalTitle"></h2>
+
+                    <div class="modal-meta">
+                        <span id="modalYear"></span>
+                        <span id="modalRuntime"></span>
+                        <span id="modalRating"></span>
+                    </div>
+
+                    <div id="modalGenres" class="modal-genres"></div>
+
+                    <p id="modalOverview" class="modal-overview">
+                        Loading details...
+                    </p>
+
+                    <a id="modalIMDb" target="_blank">
+                        View on IMDb
+                    </a>
+
+                </div>
+            </div>
+        </div>
+    </div>
 </main>
 
 <script src="app.js"></script>

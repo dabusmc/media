@@ -5,6 +5,7 @@ const filmGrid = document.getElementById("filmGrid");
 const searchInput = document.getElementById("searchInput");
 
 const posterCache = JSON.parse(localStorage.getItem("posterCache") || "{}");
+const detailsCache = JSON.parse(localStorage.getItem("detailsCache") || "{}");
 const CACHE_EXPIRY = 1000 * 60 * 60 * 24 * 7;
 
 let allFilms = [];
@@ -12,6 +13,18 @@ let renderToken = 0;
 
 let sortMode = "sheet";
 let sortDirection = { alpha: "asc", year: "desc" };
+
+const filmModal = document.getElementById("filmModal");
+const modalPoster = document.getElementById("modalPoster");
+const modalTitle = document.getElementById("modalTitle");
+const modalYear = document.getElementById("modalYear");
+const modalIMDb = document.getElementById("modalIMDb");
+const modalClose = document.getElementById("modalClose");
+const modalBackdrop = document.getElementById("modalBackdrop");
+const modalRuntime = document.getElementById("modalRuntime");
+const modalRating = document.getElementById("modalRating");
+const modalGenres = document.getElementById("modalGenres");
+const modalOverview = document.getElementById("modalOverview");
 
 function parseCSV(csv) {
     const lines = csv.trim().split("\n");
@@ -139,6 +152,56 @@ async function getTMDBPoster(imdbUrl) {
     }
 }
 
+async function getMovieDetails(imdbUrl) {
+
+    const imdbID = extractIMDbID(imdbUrl);
+
+    if (!imdbID) return null;
+
+    const cached = detailsCache[imdbID];
+
+    if (
+        cached &&
+        Date.now() - cached.time < CACHE_EXPIRY
+    ) {
+        return cached.data;
+    }
+
+    try {
+
+        const findRes = await fetch(
+            `https://api.themoviedb.org/3/find/${imdbID}?api_key=${TMDB_KEY}&external_source=imdb_id`
+        );
+
+        const findData = await findRes.json();
+
+        const movie = findData.movie_results?.[0];
+
+        if (!movie) return null;
+
+        const detailRes = await fetch(
+            `https://api.themoviedb.org/3/movie/${movie.id}?api_key=${TMDB_KEY}`
+        );
+
+        const details = await detailRes.json();
+
+        detailsCache[imdbID] = {
+            data: details,
+            time: Date.now()
+        };
+
+        localStorage.setItem(
+            "detailsCache",
+            JSON.stringify(detailsCache)
+        );
+
+        return details;
+
+    } catch {
+        return null;
+    }
+}
+
 function getFilteredFilms() {
     const query = searchInput.value.trim().toLowerCase();
     if (!query) return allFilms;
@@ -234,6 +297,12 @@ function createCard(film, isUncompleted, token) {
     card.appendChild(img);
     card.appendChild(info);
 
+    card.style.cursor = "pointer";
+
+    card.addEventListener("click", () => {
+        openModal(film, img.src);
+    });
+
     loadPoster(img, film.IMDB, token);
 
     return card;
@@ -247,5 +316,81 @@ async function loadPoster(img, imdb, token) {
     img.src = poster;
 }
 
+async function openModal(film, posterSrc) {
+    filmModal.classList.remove("hidden");
+
+    modalPoster.src = posterSrc;
+
+    modalTitle.textContent = film.Film;
+    modalYear.textContent = film["Release Year"] || "";
+
+    modalRuntime.textContent = "";
+    modalRating.textContent = "";
+
+    modalGenres.innerHTML = "";
+
+    modalOverview.textContent = "Loading details...";
+
+    modalIMDb.href = film.IMDB;
+
+    modalBackdrop.style.backgroundImage = `url(${posterSrc})`;
+
+    const details = await getMovieDetails(film.IMDB);
+
+    if (!details) {
+        modalOverview.textContent = "No description available.";
+        return;
+    }
+
+    modalRuntime.textContent =
+        details.runtime
+            ? `${details.runtime} mins`
+            : "";
+
+    modalRating.textContent =
+        details.vote_average
+            ? `★ ${details.vote_average.toFixed(1)}`
+            : "";
+
+    modalOverview.textContent =
+        details.overview || "No description available.";
+
+    modalGenres.innerHTML = "";
+
+    details.genres?.forEach(g => {
+
+        const tag = document.createElement("span");
+
+        tag.textContent = g.name;
+
+        modalGenres.appendChild(tag);
+
+    });
+
+    if (details.backdrop_path) {
+
+        modalBackdrop.style.backgroundImage =
+            `url(https://image.tmdb.org/t/p/original${details.backdrop_path})`;
+
+    }
+}
+
 searchInput.addEventListener("input", displayFilms);
+
+modalClose.addEventListener("click", () => {
+    filmModal.classList.add("hidden");
+});
+
+filmModal.addEventListener("click", e => {
+    if (e.target === filmModal) {
+        filmModal.classList.add("hidden");
+    }
+});
+
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+        filmModal.classList.add("hidden");
+    }
+});
+
 loadFilms();
